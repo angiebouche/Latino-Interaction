@@ -1,0 +1,141 @@
+---
+title: "Latino"
+output: html_document
+---
+
+
+Wrangling for Latino Census Tracts High Latino = 1
+```{r}
+#data_fe_carb_soc_latino<- data_fe_carb_soc %>% 
+ # mutate(latino_bin = case_when(Percent_Hispanic <= 34 ~ "0", Percent_Hispanic >=34 ~ "1"))
+  
+
+#High and low latino tracts determined for 2014, carried throughout years of data
+
+latino<- read_csv("merged_data_fe_carb_soc_latino.csv")
+
+
+  
+high_latino <- latino %>% 
+  filter(latino_bin=="1")
+
+low_latino <-latino %>% 
+ filter(latino_bin=="0")
+
+
+
+
+```
+
+
+Fixed Effects on CARB-lm  All on 2014, 2015, 2016 with Latino Interactions
+```{r}
+  as.numeric(latino$latino_bin)
+
+#Trying fixed effects with latino binary variables - Interaction term
+carb_diabetes_latino <- lm(Diabetes ~ PM2.5 + (PM2.5*latino_bin) + factor(Census_Tract) + factor(Year) + Percent_Hispanic + Education + Poverty + Unemployment, data = latino)
+
+summary(carb_diabetes_latino)
+
+#Trying fixed effects with two different latino equations
+carb_diabetes_high_latino <- lm(Diabetes ~ PM2.5 + factor(Census_Tract) + factor(Year)+ Percent_Hispanic + Education + Poverty + Unemployment, data = high_latino)
+
+summary(carb_diabetes_high_latino)
+
+carb_diabetes_low_latino <- lm(Diabetes ~ PM2.5 + factor(Census_Tract) + factor(Year)+ Percent_Hispanic + Education + Poverty + Unemployment, data = low_latino)
+
+summary(carb_diabetes_low_latino)
+
+
+```
+
+
+USING THE MEDIAN
+-----------With latino interaction term
+
+Call:
+lm(formula = Diabetes ~ PM2.5 + (PM2.5 * latino_bin) + factor(Census_Tract) + 
+    factor(Year) + Percent_Hispanic + Education + Poverty + Unemployment, 
+    data = latino)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.52709 -0.15109  0.00009  0.16402  1.44620 
+
+Coefficients: (1 not defined because of singularities)
+                                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                     7.766e+00  2.049e-01  37.892  < 2e-16 ***
+PM2.5                           .02078  6.817e-03   3.049 0.002305 ** 
+latino_bin                      .005783  3.113e-01   1.858 0.063221 .  
+
+*******Interaction term not significant
+
+
+--------------New equation With low hispanic areas only
+Call:
+lm(formula = Diabetes ~ PM2.5 + factor(Census_Tract) + factor(Year) + 
+    Percent_Hispanic + Education + Poverty + Unemployment, data = low_latino)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.53198 -0.12962 -0.00123  0.13078  1.43267 
+
+Coefficients:
+                                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                     7.715e+00  1.784e-01  43.251  < 2e-16 ***
+PM2.5                           .03197  6.693e-03   4.777 1.83e-06 ***
+
+
+----------------New equation with high hispanic areas only
+Call:
+lm(formula = Diabetes ~ PM2.5 + factor(Census_Tract) + factor(Year) + 
+    Percent_Hispanic + Education + Poverty + Unemployment, data = high_latino)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.3802 -0.1796  0.0031  0.1929  1.4103 
+
+Coefficients:
+                                Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                     6.736947   0.265618  25.363  < 2e-16 ***
+PM2.5                           0.022433   0.008358   2.684 0.007295 ** 
+*********Coefficient not significant
+
+SUMMMARY STATS - NOT FOR LATINO INTERACTION
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(janitor)
+
+master<- read_csv("carb_ces_pm2.5_diabetes_ACSandCESsocio_race.csv") %>% 
+  clean_names()
+
+hist(master$percent_hispanic_or_latino_of_any_race_2014)
+hist(master$percent_hispanic_or_latino_of_any_race_2015)
+hist(master$percent_hispanic_or_latino_of_any_race_2016)
+
+median(master$percent_hispanic_or_latino_of_any_race_2014, na.rm=TRUE)
+median(master$percent_hispanic_or_latino_of_any_race_2015, na.rm=TRUE)
+median(master$percent_hispanic_or_latino_of_any_race_2016, na.rm=TRUE)
+#median is 33.1, 33.6, 33.7,
+#call majority latino anything over 34%?
+
+
+hist(carb_diabetes$pm_2014)
+hist(carb_diabetes$pm_2015)
+hist(carb_diabetes$pm_2016)
+hist(carb_diabetes$pm_2017)
+hist(carb_diabetes$pm_2017, breaks=32)
+hist(carb_diabetes$pm_2016, breaks=32)
+hist(carb_diabetes$pm_2015, breaks=32)
+hist(carb_diabetes$pm_2014, breaks=32)
+hist(carb_diabetes$poverty_14)
+hist(carb_diabetes$poverty_15)
+hist(carb_diabetes$poverty_16)
+hist(carb_diabetes$poverty_17)
+hist(carb_diabetes$unemployment_14)
+hist(carb_diabetes$unemployment_15)
+hist(carb_diabetes$unemployment_16)
+hist(carb_diabetes$unemployment_17)
+
+```
