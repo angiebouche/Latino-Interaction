@@ -5,7 +5,11 @@ output: html_document
 
 
 Wrangling for Latino Census Tracts High Latino = 1
-```{r}
+```{rsetup, include=FALSE}
+
+
+library(tidyverse)
+library(janitor)
 #data_fe_carb_soc_latino<- data_fe_carb_soc %>% 
  # mutate(latino_bin = case_when(Percent_Hispanic <= 34 ~ "0", Percent_Hispanic >=34 ~ "1"))
   
@@ -14,16 +18,12 @@ Wrangling for Latino Census Tracts High Latino = 1
 
 latino<- read_csv("merged_data_fe_carb_soc_latino.csv")
 
-
   
 high_latino <- latino %>% 
   filter(latino_bin=="1")
 
 low_latino <-latino %>% 
  filter(latino_bin=="0")
-
-
-
 
 ```
 
@@ -33,7 +33,7 @@ Fixed Effects on CARB-lm  All on 2014, 2015, 2016 with Latino Interactions
   as.numeric(latino$latino_bin)
 
 #Trying fixed effects with latino binary variables - Interaction term
-carb_diabetes_latino <- lm(Diabetes ~ PM2.5 + (PM2.5*latino_bin) + factor(Census_Tract) + factor(Year) + Percent_Hispanic + Education + Poverty + Unemployment, data = latino)
+carb_diabetes_latino <- lm(Diabetes ~ PM2.5 + (PM2.5*latino_bin) + factor(Census_Tract) + factor(Year) + Percent_Black_Only + Percent_American_Indian_and_Alaska_Native_Only + Percent_Hispanic + Education + Poverty + Unemployment, data = latino)
 
 summary(carb_diabetes_latino)
 
@@ -70,6 +70,21 @@ latino_bin                      .005783  3.113e-01   1.858 0.063221 .
 
 *******Interaction term not significant
 
+----------Keeping in black and Native seems to give a term that makes more sense 
+Call:
+lm(formula = Diabetes ~ PM2.5 + (PM2.5 * latino_bin) + factor(Census_Tract) + 
+    factor(Year) + Percent_Black_Only + Percent_American_Indian_and_Alaska_Native_Only + 
+    Percent_Hispanic + Education + Poverty + Unemployment, data = latino)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.51934 -0.15169  0.00042  0.16411  1.42410 
+
+Coefficients: (1 not defined because of singularities)
+                                                 Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                                     7.702e+00  2.047e-01  37.619  < 2e-16 ***
+PM2.5                                           2.088e-02  6.804e-03   3.069 0.002150 ** 
+latino_bin                                      3.458e-01  3.129e-01   1.105 0.269158 
 
 --------------New equation With low hispanic areas only
 Call:
@@ -102,10 +117,8 @@ PM2.5                           0.022433   0.008358   2.684 0.007295 **
 *********Coefficient not significant
 
 SUMMMARY STATS - NOT FOR LATINO INTERACTION
-```{r setup, include=FALSE}
+```{r}
 
-library(tidyverse)
-library(janitor)
 
 master<- read_csv("carb_ces_pm2.5_diabetes_ACSandCESsocio_race.csv") %>% 
   clean_names()
